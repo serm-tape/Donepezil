@@ -36,6 +36,39 @@ defmodule Donepezil do
     doFindWord(fullPath, wordToFind)
   end
 
+  def getReactions do
+    client = init()
+    fullPath = String.replace("https://graph.facebook.com/v2.8/"<> client.object_id <>"/reactions/?access_token="<>client.id<>"|"<>client.secret, "\n", "")
+    IO.puts fullPath
+    all = doGetReactions(fullPath)
+    Enum.each(
+      all,
+      fn v -> IO.puts v end
+    )
+    file = File.open! "tmp/reactions.csv", [:write]
+    Enum.each(
+      all,
+      fn v -> IO.binwrite file, v<>"\n" end
+    )
+    File.close file
+  end
+
+  def doGetReactions(url) do
+    resp = HTTPotion.get(url)
+    {_,body} = Poison.decode(resp.body)
+    list = Enum.map(
+      body["data"],
+      fn v -> v["id"] <> "," <> v["name"] <> "," <> v["type"] end
+    )
+
+    if body["paging"] && body["paging"]["next"] do
+      IO.puts "read next page"
+      list2 = doGetReactions(body["paging"]["next"])
+      list = Enum.concat(list, list2)
+    end
+    list
+  end
+  
   def doFindWord(url, friend) do
     resp = HTTPotion.get(url)
     {_,body} = Poison.decode(resp.body)
