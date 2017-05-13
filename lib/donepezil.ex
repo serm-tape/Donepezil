@@ -29,6 +29,34 @@ defmodule Donepezil do
     )
   end
 
+  def findFriendInComment do
+    client = init()
+    wordToFind = String.replace(IO.gets("word to find:"), "\n", "")
+    fullPath = String.replace("https://graph.facebook.com/v2.8/"<> client.object_id <>"/comments/?access_token="<>client.id<>"|"<>client.secret, "\n", "")
+    doFindWord(fullPath, wordToFind)
+  end
+
+  def doFindWord(url, friend) do
+    resp = HTTPotion.get(url)
+    {_,body} = Poison.decode(resp.body)
+    list = Enum.each(
+      body["data"],
+      fn v -> 
+        {_,regex} = Regex.compile(friend)
+        if Regex.match?(regex, v["message"]) do
+          IO.puts v["id"]
+          IO.puts v["message"]
+        end
+      end
+    )
+    #see if there is more
+    if body["paging"] && body["paging"]["next"] do
+      IO.puts "read next page"
+      list2 = doFindWord(body["paging"]["next"], friend)
+      list = Enum.concat(list, list2)
+    end
+  end
+
   def readImageComments(client) do
     fullpath = "https://graph.facebook.com/v2.8/" <> client.object_id <> "/comments?fields=attachment,from&access_token="<>client.id<>"|"<>client.secret
     fullpath = String.replace(fullpath, "\n", "")
