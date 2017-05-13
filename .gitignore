@@ -21,3 +21,6 @@ erl_crash.dump
 
 # output folder
 /tmp
+
+# built files
+donepezil

@@ -8,6 +8,31 @@ defmodule Donepezil do
       secret: "0",
       object_id: "0"
   )
+
+  def main(args) do
+    args |> parse_args |> process
+  end
+
+  def process([]) do
+    IO.puts "No arguments given"
+  end
+
+  def process(options) do
+    case options["mode"] do
+      :image -> memorize
+      :ff -> findFriendInComment
+      :reactions -> getReactions
+    end
+    IO.puts "more useless application at http://github.com/serm-tape"
+  end
+
+  defp parse_args(args) do
+    {options, _, _} = OptionParser.parse(args,
+      switches: [mode: :string]
+    )
+    options
+  end
+
   def init do
     client = %Donepezil{}
     client = %{client | id: IO.gets "App Id:"}
